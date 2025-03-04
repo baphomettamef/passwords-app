@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Generador de Contraseñas Seguras</title>
+  
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+
+  <style>
+    /* Variables */
+    :root {
+      --primary-color: #4CAF50;
+      --secondary-color: #FF5722;
+      --bg-color: #1e1e1e;
+      --text-color: #f1f1f1;
+      --button-hover: #45a049;
+      --border-radius: 8px;
+    }
+
+    /* General Styles */
+    body {
+      font-family: 'Roboto', sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      flex-direction: column;
+      text-align: center;
+      padding: 20px;
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      margin-bottom: 20px;
+    }
+
+    h2 {
+      font-size: 1.5rem;
+      margin-bottom: 10px;
+    }
+
+    /* Form & Inputs */
+    .form-container {
+      background-color: #333;
+      padding: 20px;
+      border-radius: var(--border-radius);
+      width: 100%;
+      max-width: 400px;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: var(--border-radius);
+      border: 2px solid #444;
+      background-color: #222;
+      color: var(--text-color);
+      font-size: 1rem;
+    }
+
+    input[type="range"] {
+      width: 100%;
+    }
+
+    .output {
+      font-size: 1.2rem;
+      margin: 20px 0;
+      padding: 10px;
+      background-color: #444;
+      border-radius: var(--border-radius);
+      word-wrap: break-word;
+    }
+
+    .button {
+      background-color: var(--primary-color);
+      color: var(--text-color);
+      padding: 10px 20px;
+      border-radius: var(--border-radius);
+      cursor: pointer;
+      transition: background-color 0.3s;
+      border: none;
+    }
+
+    .button:hover {
+      background-color: var(--button-hover);
+    }
+
+    /* Strength Evaluation */
+    .strength {
+      margin-top: 10px;
+      padding: 5px;
+      font-weight: bold;
+    }
+
+    .strength.weak {
+      color: red;
+    }
+
+    .strength.medium {
+      color: orange;
+    }
+
+    .strength.strong {
+      color: green;
+    }
+
+    /* List of saved passwords */
+    .password-list {
+      margin-top: 30px;
+      width: 100%;
+      max-width: 400px;
+    }
+
+    .password-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background-color: #444;
+      margin-bottom: 10px;
+      padding: 10px;
+      border-radius: var(--border-radius);
+    }
+
+    .password-item button {
+      background-color: var(--secondary-color);
+      color: white;
+      padding: 5px 10px;
+      border-radius: var(--border-radius);
+      border: none;
+      cursor: pointer;
+    }
+
+    .password-item button:hover {
+      background-color: #f44336;
+    }
+
+    /* Responsiveness */
+    @media (max-width: 600px) {
+      h1 {
+        font-size: 2rem;
+      }
+
+      .form-container {
+        padding: 15px;
+      }
+
+      .button, .password-item button {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Generador de Contraseñas Seguras</h1>
+
+  <div class="form-container">
+    <!-- Formulario para generar contraseña -->
+    <h2>Generar Contraseña</h2>
+    <label for="length">Longitud de la contraseña:</label>
+    <input type="range" id="length" min="8" max="50" value="12">
+    <span id="lengthValue">12</span> caracteres
+
+    <label for="includeUppercase">Incluir mayúsculas:</label>
+    <input type="checkbox" id="includeUppercase" checked>
+
+    <label for="includeNumbers">Incluir números:</label>
+    <input type="checkbox" id="includeNumbers" checked>
+
+    <label for="includeSymbols">Incluir símbolos:</label>
+    <input type="checkbox" id="includeSymbols" checked>
+
+    <button class="button" id="generateBtn">Generar Contraseña</button>
+
+    <div class="output" id="generatedPassword">Contraseña generada aparecerá aquí...</div>
+    <div class="strength" id="strength">Fuerza: Débil</div>
+
+    <button class="button" id="copyBtn">Copiar Contraseña</button>
+    <button class="button" id="saveBtn">Guardar Contraseña</button>
+  </div>
+
+  <section class="password-list" id="passwordList">
+    <h2>Contraseñas Guardadas</h2>
+    <!-- Contraseñas guardadas aparecerán aquí -->
+  </section>
+
+  <script>
+    // Selección de elementos
+    const lengthSlider = document.getElementById('length');
+    const lengthValue = document.getElementById('lengthValue');
+    const generateBtn = document.getElementById('generateBtn');
+    const generatedPasswordElem = document.getElementById('generatedPassword');
+    const strengthElem = document.getElementById('strength');
+    const copyBtn = document.getElementById('copyBtn');
+    const saveBtn = document.getElementById('saveBtn');
+    const passwordListElem = document.getElementById('passwordList');
+    const includeUppercase = document.getElementById('includeUppercase');
+    const includeNumbers = document.getElementById('includeNumbers');
+    const includeSymbols = document.getElementById('includeSymbols');
+
+    let passwords = JSON.parse(localStorage.getItem('passwords')) || [];
+
+    // Mostrar longitud seleccionada
+    lengthSlider.addEventListener('input', function() {
+      lengthValue.textContent = lengthSlider.value;
+    });
+
+    // Generar contraseña
+    function generatePassword() {
+      const length = parseInt(lengthSlider.value);
+      const chars = 'abcdefghijklmnopqrstuvwxyz';
+      const uppercaseChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+      const numbers = '0123456789';
+      const symbols = '!@#$%^&*()_+[]{}|;:,.<>?';
+      
+      let charPool = chars;
+      if (includeUppercase.checked) charPool += uppercaseChars;
+      if (includeNumbers.checked) charPool += numbers;
+      if (includeSymbols.checked) charPool += symbols;
+
+      let password = '';
+      for (let i = 0; i < length; i++) {
+        const randomIndex = Math.floor(Math.random() * charPool.length);
+        password += charPool[randomIndex];
+      }
+
+      generatedPasswordElem.textContent = password;
+      evaluateStrength(password);
+    }
+
+    // Evaluar fuerza de la contraseña
+    function evaluateStrength(password) {
+      let strength = 'Débil';
+      if (password.length >= 12 && /[A-Z]/.test(password) && /[0-9]/.test(password) && /[!@#$%^&*()_+[\]{}|;:,.<>?]/.test(password)) {
+        strength = 'Fuerte';
+      } else if (password.length >= 8) {
+        strength = 'Media';
+      }
+
+      strengthElem.textContent = `Fuerza: ${strength}`;
+      strengthElem.className = `strength ${strength.toLowerCase()}`;
+    }
+
+    // Copiar contraseña al portapapeles
+    copyBtn.addEventListener('click', function() {
+      navigator.clipboard.writeText(generatedPasswordElem.textContent)
+        .then(() => alert('Contraseña copiada al portapapeles'))
+        .catch(() => alert('Error al copiar'));
+    });
+
+    // Guardar contraseña
+    saveBtn.addEventListener('click', function() {
+      const password = generatedPasswordElem.textContent;
+      if (password && !passwords.includes(password)) {
+        passwords.push(password);
+        localStorage.setItem('passwords', JSON.stringify(passwords));
+        renderPasswordList();
+        alert('Contraseña guardada');
+      }
+    });
+
+    // Renderizar lista de contraseñas guardadas
+    function renderPasswordList() {
+      passwordListElem.innerHTML = '<h2>Contraseñas Guardadas</h2>';
+      passwords.forEach(password => {
+        const passwordItem = document.createElement('div');
+        passwordItem.classList.add('password-item');
+        passwordItem.innerHTML = `${password} <button onclick="removePassword('${password}')">Eliminar</button>`;
+        passwordListElem.appendChild(passwordItem);
+      });
+    }
+
+    // Eliminar contraseña guardada
+    function removePassword(password) {
+      passwords = passwords.filter(p => p !== password);
+      localStorage.setItem('passwords', JSON.stringify(passwords));
+      renderPasswordList();
+      alert('Contraseña eliminada');
+    }
+
+    // Inicializar el juego
+    generateBtn.addEventListener('click', generatePassword);
+    renderPasswordList();
+  </script>
+
+</body>
+</html>
